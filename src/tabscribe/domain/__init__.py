@@ -28,7 +28,7 @@ from .performance import (
     Track,
 )
 from .rhythm import TICKS_PER_BEAT, Rhythm, Seconds, Ticks
-from .score import ChordSymbol, DrumPart, Part, PitchedPart, ScoreHit, ScoreNote, Song
+from .score import ChordSymbol, DrumPart, Part, PitchedPart, ScoreHit, ScoreNote, Song, SyncPoint
 
 __all__ = [
     "AudioRef", "StemSet",
@@ -36,5 +36,5 @@ __all__ = [
     "bass", "drums", "guitar", "pitch_name",
     "ChordSegment", "DrumHit", "DrumTrack", "Harmony", "NoteEvent", "PitchedTrack", "Track",
     "TICKS_PER_BEAT", "Rhythm", "Seconds", "Ticks",
-    "ChordSymbol", "DrumPart", "Part", "PitchedPart", "ScoreHit", "ScoreNote", "Song",
+    "ChordSymbol", "DrumPart", "Part", "PitchedPart", "ScoreHit", "ScoreNote", "Song", "SyncPoint",
 ]

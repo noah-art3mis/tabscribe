@@ -15,6 +15,8 @@ def main() -> None:
     tab.add_argument("-c", "--config", type=Path, help="TOML file choosing adapters per stage")
     tab.add_argument("--inspect", action="store_true",
                      help="also save every stage's output as JSON in <out>/stages/")
+    tab.add_argument("--no-media", action="store_true",
+                     help="don't copy the recording and stems next to the tab")
 
     watch = sub.add_parser("watch", help="open one .atex file in the web app (live reload)")
     watch.add_argument("atex", type=Path)
@@ -48,14 +50,26 @@ def main() -> None:
         from .application.inspect import stage_dumper
         from .domain import AudioRef
 
+        from .library import save_media
+
         config = load_config(args.config)
         pipeline = build_pipeline(config)
-        observe = stage_dumper(args.out / "stages") if args.inspect else None
-        song = pipeline.run(AudioRef(args.audio), args.out / "work", observe=observe)
+        dump = stage_dumper(args.out / "stages") if args.inspect else None
+        outputs: dict = {}
+
+        def observe(stage, output):
+            outputs[stage] = output
+            if dump:
+                dump(stage, output)
+
+        song = pipeline.run(AudioRef(args.audio), args.out / ".work" / args.audio.stem,
+                            observe=observe)
         for writer in build_writers(config):
             path = args.out / f"{args.audio.stem}.{writer.extension}"
             path.write_text(writer.write(song))
             print(path)
+        if not args.no_media and args.audio.exists():
+            print(save_media(args.out, args.audio.stem, args.audio, outputs.get("3_stems") or {}))
     elif args.cmd == "watch":
         from .web.server import serve as serve_web
 

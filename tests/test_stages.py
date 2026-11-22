@@ -210,3 +210,68 @@ def test_web_transcribes_an_upload(web):
     assert status["status"] == "done", status
     assert status["done"][-1] == "Clean-up"
     assert (lib / "my take.atex").exists()
+
+
+# --- recording sync and media ------------------------------------------------------------
+
+def _fake_song():
+    from tabscribe.adapters.testing.fakes import FakeHarmony, FakePitch, FakeRhythm
+    mix = AudioRef(Path("x.wav"))
+    rhythm = FakeRhythm().analyze(mix)
+    track = PitchedTrack(guitar(), FakePitch().transcribe(mix, guitar()))
+    return GridQuantizer().quantize([track], rhythm, FakeHarmony().analyze(mix, rhythm), "t"), rhythm
+
+
+def test_quantizer_records_where_each_beat_is_in_the_recording():
+    song, rhythm = _fake_song()
+    assert [p.seconds for p in song.sync] == [round(b, 4) for b in rhythm.beat_times]
+    assert [p.tick for p in song.sync] == [i * TICKS_PER_BEAT for i in range(len(rhythm.beat_times))]
+
+
+@needs_alphatab
+def test_sync_points_survive_writing_and_reading():
+    from tabscribe.adapters.notation.alphatex_reader import AlphaTexReader
+    song, _ = _fake_song()
+    text = AlphaTexWriter().write(song)
+    assert "\\sync (" in text
+    back = AlphaTexReader().read(text)
+    assert [(p.tick, round(p.seconds, 3)) for p in back.sync] == \
+        [(p.tick, round(p.seconds, 3)) for p in song.sync]
+
+
+def test_media_saved_and_listed_mix_first(tmp_path):
+    from tabscribe.library import list_media, save_media
+    mix = tmp_path / "take.mp3"
+    mix.write_bytes(b"mix")
+    stem = tmp_path / "g.wav"
+    stem.write_bytes(b"gtr")
+    save_media(tmp_path, "Song", mix, {Role.GUITAR: AudioRef(stem), Role.BASS: AudioRef(mix)})
+    listed = list_media(tmp_path, "Song")
+    assert [m["file"] for m in listed] == ["mix.mp3", "guitar.wav"]  # bass was the mix itself: skipped
+    assert listed[0]["label"] == "Full recording"
+
+
+def test_web_serves_media_with_ranges(web):
+    from tabscribe.library import media_dir
+    base, lib = web
+    folder = media_dir(lib, "demo")
+    folder.mkdir()
+    (folder / "mix.wav").write_bytes(bytes(range(256)) * 4)
+    assert _req(f"{base}/api/media/demo")[0]["file"] == "mix.wav"
+    r = urllib.request.Request(f"{base}/media/demo/mix.wav", headers={"Range": "bytes=10-19"})
+    with urllib.request.urlopen(r) as resp:
+        assert resp.status == 206
+        assert resp.headers["Content-Range"] == "bytes 10-19/1024"
+        assert resp.read() == bytes(range(10, 20))
+    assert [s["media"] for s in _req(f"{base}/api/songs")] == [True]
+
+
+def test_web_transcription_keeps_the_recording(web):
+    import time
+    base, lib = web
+    job = _req(f"{base}/api/transcribe", "POST", b"RIFFfake", {"X-Filename": "take.wav"})["job"]
+    for _ in range(50):
+        if _req(f"{base}/api/jobs/{job}")["status"] != "running":
+            break
+        time.sleep(0.1)
+    assert (lib / "take.media" / "mix.wav").read_bytes() == b"RIFFfake"

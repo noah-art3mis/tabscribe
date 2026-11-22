@@ -28,6 +28,10 @@ Songs are stored as alphaTex (`.atex`). The `.atex` file is the source of truth:
 - Statements with more than one value take parentheses: `\ts (3 4)`, `\tuning (E4 B3 G3 D3 A2 E2)`, `\articulation (Kick 36)`. No `.` line is needed after the header.
 - Tracks start with `\track "Name"`. Guitar and bass use fret.string; drums (`instrument percussion`) use the articulation names defined under the drum track (`Kick`, `Snare`, `HatClosed`, ...), e.g. `(HatClosed Kick).8`.
 
+## Sync points (bottom of the file)
+
+Songs transcribed from a recording end with lines like `\sync (4 0 9619 0.5)`: bar index (from 0), occurrence, time in the recording in milliseconds, position within the bar (0–1). They keep the original recording in step with the tab when both play in the web app. Don't remove them when editing notes. If you insert or delete bars, shift the bar index of every later `\sync` line by the same amount.
+
 ## Playability
 
 When moving notes, keep them playable: within about a 4–5 fret stretch per position for a single hand shape, and prefer staying in one position over jumping. Guitar standard tuning is `\tuning (E4 B3 G3 D3 A2 E2)` (string 1 to 6); bass is `\tuning (G2 D2 A1 E1)`. Keep the parentheses: without them the tuning swallows the first beat.

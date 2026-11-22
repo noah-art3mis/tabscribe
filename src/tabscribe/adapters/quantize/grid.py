@@ -29,6 +29,7 @@ from ...domain import (
     ScoreHit,
     ScoreNote,
     Song,
+    SyncPoint,
     Track,
 )
 
@@ -166,6 +167,12 @@ class GridQuantizer:
                 continue
             chords.append(ChordSymbol(start, seg.label))
 
+        # Where each beat of the score is in the recording, for playing the
+        # two together (written as alphaTex sync points).
+        sync = [SyncPoint(round(rhythm.beats_at(b) * TICKS_PER_BEAT) + shift, round(b, 4))
+                for b in rhythm.beat_times]
+        sync = [p for p in sync if p.tick >= 0]
+
         return Song(
             title=title,
             tempo_bpm=rhythm.tempo_bpm,
@@ -173,4 +180,5 @@ class GridQuantizer:
             beat_unit=rhythm.beat_unit,
             chords=chords,
             parts=parts,
+            sync=sync,
         )

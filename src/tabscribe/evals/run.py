@@ -57,7 +57,7 @@ def evaluate_case(atex: Path, config: dict[str, Any], workdir: Path, humanize: H
     if pipeline.harmony:
         result["chords"] = metrics.chords(case.harmony, seen["2_harmony"])
 
-    est_tracks = _by_role(seen["3_tracks"])
+    est_tracks = _by_role(seen["4_tracks"])
     for track in case.tracks:
         est = est_tracks.get(track.instrument.role)
         key = f"transcribe_{track.instrument.role.value}"

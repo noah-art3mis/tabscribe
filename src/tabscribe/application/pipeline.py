@@ -19,6 +19,7 @@ from ..domain import (
     PitchedTrack,
     Role,
     Song,
+    StemSet,
     Track,
 )
 from .ports import (
@@ -66,12 +67,18 @@ class TranscriptionPipeline:
 
     # Stages are separate methods so callers (or tests) can run them one at a time.
 
-    def transcribe(self, mix: AudioRef, workdir: Path) -> list[Track]:
+    def separate(self, mix: AudioRef, workdir: Path) -> StemSet:
+        """Stems for the requested instruments (empty with an end-to-end model)."""
+        if self.mix_transcriber is not None:
+            return {}
+        roles = list(dict.fromkeys(i.role for i in self.instruments))
+        return self.separator.separate(mix, roles, workdir)
+
+    def transcribe(self, mix: AudioRef, workdir: Path, stems: StemSet | None = None) -> list[Track]:
         if self.mix_transcriber is not None:
             return self.mix_transcriber.transcribe(mix, self.instruments)
-
-        roles = list(dict.fromkeys(i.role for i in self.instruments))
-        stems = self.separator.separate(mix, roles, workdir)
+        if stems is None:
+            stems = self.separate(mix, workdir)
         tracks: list[Track] = []
         for inst in self.instruments:
             stem = stems.get(inst.role)
@@ -114,12 +121,14 @@ class TranscriptionPipeline:
         seen("1_rhythm", rhythm)
         harmony = self.harmony.analyze(mix, rhythm) if self.harmony else Harmony()
         seen("2_harmony", harmony)
-        tracks = self.transcribe(mix, workdir)
-        seen("3_tracks", tracks)
+        stems = self.separate(mix, workdir)
+        seen("3_stems", stems)
+        tracks = self.transcribe(mix, workdir, stems)
+        seen("4_tracks", tracks)
         song = self.quantizer.quantize(tracks, rhythm, harmony, title or mix.path.stem)
-        seen("4_quantized", song)
+        seen("5_quantized", song)
         song = self.fret(song)
-        seen("5_fretted", song)
+        seen("6_fretted", song)
         song = self.refine(song)
-        seen("6_refined", song)
+        seen("7_refined", song)
         return song

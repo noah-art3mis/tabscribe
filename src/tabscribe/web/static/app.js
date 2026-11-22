@@ -16,12 +16,15 @@
     save: $('btnSave'), revert: $('btnRevert'), sourceState: $('sourceState'), sourceError: $('sourceError'),
     diskBanner: $('diskBanner'), loadDisk: $('btnLoadDisk'), keepMine: $('btnKeepMine'),
     status: $('status'), pipelineInfo: $('pipelineInfo'),
+    recPanel: $('recordingPanel'), recSource: $('recSource'), mix: $('mix'), ab: $('btnAB'),
+    split: $('btnSplit'), swap: $('btnSwap'), splitLabel: $('splitLabel'), offset: $('offset'),
+    hearing: $('hearing'), audio: $('recording'),
   };
 
   const TRACK_COLORS = ['#e8743b', '#4f9fe8', '#5cb85c', '#c678dd', '#e5c07b', '#56b6c2'];
   const ZOOMS = [0.5, 0.6, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
-  const JOB_STAGES = ['Beats and bars', 'Chords', 'Separate and transcribe', 'Snap to grid',
-                      'Strings and frets', 'Clean-up'];
+  const JOB_STAGES = ['Beats and bars', 'Chords', 'Separate instruments', 'Notes and drums',
+                      'Snap to grid', 'Strings and frets', 'Clean-up'];
 
   const state = {
     name: null,          // open song (file name without .atex)
@@ -36,6 +39,14 @@
     zoom: 1,
     notation: false,
     playerReady: false,
+  };
+
+  // Recording-vs-tab playback state (see the "recording vs tab" section below).
+  const ALPHATAB_TICKS = 960;  // per quarter note
+  const rec = {
+    sources: [], anchors: [], playing: false,
+    ctx: null, node: null, gain: null, pan: null,
+    mix: 0.5, lastMix: 0.5, split: false, swapped: false, offsetMs: 0,
   };
 
   // ---- alphaTab ---------------------------------------------------------------
@@ -71,7 +82,9 @@
   api.scoreLoaded.on((score) => {
     state.score = score;
     applyNotation(score);
+    applyBalance(score);
     buildTrackList(score);
+    rec.anchors = syncAnchors(score);
   });
   api.midiLoaded.on(() => applyMixer());
   api.playerReady.on(() => {
@@ -81,9 +94,11 @@
   api.playerStateChanged.on((e) => {
     el.play.classList.toggle('playing', e.state === 1);
     el.play.title = e.state === 1 ? 'Pause (Space)' : 'Play (Space)';
+    recOnPlayerState(e.state === 1);
   });
   api.playerPositionChanged.on((e) => {
     el.time.textContent = `${fmtTime(e.currentTime)} / ${fmtTime(e.endTime)}`;
+    recFollow(e.currentTick);
   });
 
   function fmtTime(ms) {
@@ -194,6 +209,7 @@
       const t = document.createElement('span'); t.className = 't'; t.textContent = s.title;
       const sub = document.createElement('span'); sub.className = 'sub';
       sub.textContent = `${s.name}.atex · ${s.tracks.join(', ') || 'no tracks'}`;
+      if (s.media) { const dot = document.createElement('span'); dot.className = 'rec-dot'; dot.textContent = ' · ♪ recording'; sub.appendChild(dot); }
       li.append(t, sub);
       li.addEventListener('click', () => openSong(s.name));
       el.songs.appendChild(li);
@@ -220,6 +236,7 @@
     history.replaceState(null, '', `#song=${encodeURIComponent(name)}`);
     renderText(data.text);
     refreshLibrary();
+    if (data.name !== rec.loadedFor) { rec.loadedFor = data.name; loadRecording(data.name); }
   }
 
   // Edits made outside the app (for example by Claude Code) show up here.
@@ -321,7 +338,7 @@
   [el.loop, el.metronome, el.countIn, el.notation, el.layout, el.sourceBtn].forEach((b) => pressed(b, false));
 
   el.play.addEventListener('click', () => api.playPause());
-  el.stop.addEventListener('click', () => api.stop());
+  el.stop.addEventListener('click', () => { api.stop(); el.audio.pause(); el.audio.currentTime = 0; });
   el.speed.addEventListener('change', () => { api.playbackSpeed = Number(el.speed.value); });
   el.loop.addEventListener('click', () => {
     api.isLooping = !api.isLooping; pressed(el.loop, api.isLooping);
@@ -367,6 +384,7 @@
     if (typing) return;
     if (e.code === 'Space' && state.playerReady) { e.preventDefault(); api.playPause(); }
     if (e.key === 'Home' && state.playerReady) { e.preventDefault(); api.stop(); }
+    if (e.key.toLowerCase() === 'b') { e.preventDefault(); flipAB(); }
   });
 
   // ---- transcription jobs -------------------------------------------------------------
@@ -422,6 +440,156 @@
     }
   }
 
+
+  // ---- recording vs tab --------------------------------------------------------------
+  // alphaTab can't mix its synth with a backing track, so the recording plays in
+  // an <audio> element routed through Web Audio (for gain and panning) and follows
+  // the alphaTab cursor. The sync points in the .atex file say where each beat of
+  // the score is in the recording; between them, time is interpolated.
+
+
+  function syncAnchors(score) {
+    const points = [];
+    for (const mb of score.masterBars) {
+      for (const p of mb.syncPoints || []) {
+        if (p.syncPointValue.barOccurence !== 0) continue;
+        points.push([mb.start + p.ratioPosition * mb.calculateDuration(), p.syncPointValue.millisecondOffset]);
+      }
+    }
+    points.sort((a, b) => a[0] - b[0]);
+    return points;
+  }
+
+  // Score position (alphaTab ticks) -> recording time (ms), plus how many recording
+  // ms pass per synth ms here (the local tempo ratio).
+  function recTime(tick) {
+    const synthMsPerTick = 60000 / ((state.score ? state.score.tempo : 120) * ALPHATAB_TICKS);
+    const a = rec.anchors;
+    if (a.length < 2) return { ms: tick * synthMsPerTick, ratio: 1 };
+    let i = 0;
+    while (i < a.length - 2 && a[i + 1][0] <= tick) i++;
+    const [t0, m0] = a[i], [t1, m1] = a[i + 1];
+    const msPerTick = (m1 - m0) / Math.max(t1 - t0, 1);
+    return { ms: m0 + (tick - t0) * msPerTick, ratio: msPerTick / synthMsPerTick };
+  }
+
+  function ensureGraph() {
+    if (rec.ctx) return;
+    rec.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    rec.node = rec.ctx.createMediaElementSource(el.audio);
+    rec.pan = rec.ctx.createStereoPanner();
+    rec.gain = rec.ctx.createGain();
+    rec.node.connect(rec.pan).connect(rec.gain).connect(rec.ctx.destination);
+    applyMix();
+  }
+
+  function recActive() { return rec.sources.length > 0 && el.audio.src; }
+
+  function recOnPlayerState(playing) {
+    rec.playing = playing;
+    if (!recActive()) return;
+    if (playing) {
+      ensureGraph();
+      rec.ctx.resume();
+      el.audio.preservesPitch = true;
+      el.audio.play().catch(() => setStatus('Click play again to start the recording'));
+    } else {
+      el.audio.pause();
+    }
+  }
+
+  function recFollow(tick) {
+    if (!recActive() || !rec.playing || tick === undefined) return;
+    const { ms, ratio } = recTime(tick);
+    const target = (ms + rec.offsetMs) / 1000;
+    if (target < 0) { if (!el.audio.paused) el.audio.pause(); return; }
+    if (el.audio.paused) el.audio.play().catch(() => {});
+    const error = target - el.audio.currentTime;  // > 0: recording is behind
+    const speed = api.playbackSpeed || 1;
+    if (Math.abs(error) > 0.25 || !isFinite(error)) {
+      el.audio.currentTime = target;
+      el.audio.playbackRate = speed * ratio;
+    } else {
+      // follow the local tempo, and gently close any remaining gap
+      const nudge = Math.max(-0.08, Math.min(0.08, error * 0.8));
+      el.audio.playbackRate = Math.max(0.25, speed * ratio * (1 + nudge));
+    }
+  }
+
+  function applyMix() {
+    const x = rec.mix;
+    const tab = Math.cos(x * Math.PI / 2), recording = Math.sin(x * Math.PI / 2);  // equal power
+    api.masterVolume = recActive() ? tab : 1;
+    if (rec.gain) rec.gain.gain.value = recording;
+    if (rec.pan) rec.pan.pan.value = rec.split ? (rec.swapped ? -1 : 1) : 0;
+    el.mix.value = x;
+    el.hearing.textContent = !recActive() ? '' : x <= 0.02 ? 'Hearing the tab' : x >= 0.98 ? 'Hearing the recording' : 'Hearing both';
+    el.splitLabel.hidden = !rec.split;
+    el.splitLabel.textContent = rec.swapped ? 'Recording left · Tab right' : 'Tab left · Recording right';
+  }
+
+  // Pan the synthesized tab to the opposite side of the recording (MIDI balance 0-16).
+  function applyBalance(score) {
+    const balance = !rec.split ? 8 : rec.swapped ? 16 : 0;
+    let changed = false;
+    for (const t of score.tracks) {
+      if (t.playbackInfo.balance !== balance) { t.playbackInfo.balance = balance; changed = true; }
+    }
+    return changed;
+  }
+
+  function setSplit(split, swapped) {
+    rec.split = split; rec.swapped = swapped;
+    pressed(el.split, split);
+    el.swap.disabled = !split;
+    if (state.score && applyBalance(state.score)) {
+      const wasPlaying = rec.playing;
+      api.loadMidiForScore();
+      if (wasPlaying) setTimeout(() => api.play(), 150);
+    }
+    applyMix();
+  }
+
+  async function loadRecording(name) {
+    rec.sources = [];
+    el.audio.removeAttribute('src');
+    el.audio.load();
+    try {
+      rec.sources = await (await fetch(`/api/media/${encodeURIComponent(name)}`)).json();
+    } catch { rec.sources = []; }
+    el.recPanel.hidden = rec.sources.length === 0;
+    el.recSource.innerHTML = '';
+    for (const s of rec.sources) {
+      const o = document.createElement('option');
+      o.value = s.file; o.textContent = s.label;
+      el.recSource.appendChild(o);
+    }
+    if (rec.sources.length) setRecSource(rec.sources[0].file);
+    applyMix();
+  }
+
+  function setRecSource(file) {
+    const t = el.audio.currentTime;
+    el.audio.src = `/media/${encodeURIComponent(state.name)}/${encodeURIComponent(file)}`;
+    el.audio.currentTime = t || 0;
+    if (rec.playing) el.audio.play().catch(() => {});
+  }
+
+  function flipAB() {
+    if (!recActive()) return;
+    if (rec.mix > 0.02 && rec.mix < 0.98) rec.lastMix = rec.mix;
+    rec.mix = rec.mix >= 0.5 ? 0 : 1;
+    applyMix();
+  }
+
+  el.recSource.addEventListener('change', () => setRecSource(el.recSource.value));
+  el.mix.addEventListener('input', () => { rec.mix = Number(el.mix.value); applyMix(); });
+  el.ab.addEventListener('click', flipAB);
+  el.split.addEventListener('click', () => setSplit(!rec.split, rec.swapped));
+  el.swap.addEventListener('click', () => setSplit(rec.split, !rec.swapped));
+  el.offset.addEventListener('change', () => { rec.offsetMs = Number(el.offset.value) || 0; });
+  pressed(el.split, false);
+
   // ---- status ---------------------------------------------------------------------------
 
   function setStatus(msg) { el.status.textContent = msg; }
@@ -444,6 +612,7 @@
 
   // ---- start ----------------------------------------------------------------------------
 
+  window.tabscribe = { api, rec, state };  // for debugging in the browser console
   el.body.classList.add('no-song');
   refreshLibrary();
   setInterval(refreshLibrary, 4000);

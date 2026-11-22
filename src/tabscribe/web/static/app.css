@@ -201,3 +201,17 @@ textarea:focus-visible { outline: none; }
   .song-title { display: none; }
   #btnCountIn { display: none; }
 }
+
+/* recording comparison */
+.recording .field { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
+.recording .field > span:first-child { color: var(--muted); min-width: 44px; }
+.recording select { flex: 1; min-width: 0; }
+.recording .mixer-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; margin: 10px 0 8px; font-size: 12px; }
+.recording .mixer-row .end { color: var(--muted); }
+.recording input[type=range] { width: 100%; accent-color: var(--accent); }
+.recording .rec-buttons { display: flex; gap: 6px; align-items: center; }
+.recording .rec-buttons button:first-child { flex: 1; }
+.recording .offset input { width: 76px; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 6px; font: inherit; }
+.hearing { font-size: 12px; color: var(--accent-2); }
+.split-label { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.songs .sub .rec-dot { color: var(--accent-2); }

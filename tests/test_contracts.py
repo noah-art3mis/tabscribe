@@ -96,7 +96,7 @@ def test_pipeline_rejects_missing_stages():
 def test_observer_sees_every_stage(tmp_path):
     seen = []
     fake_pipeline().run(MIX, tmp_path, observe=lambda stage, _: seen.append(stage))
-    assert seen == ["1_rhythm", "2_harmony", "3_tracks", "4_quantized", "5_fretted", "6_refined"]
+    assert seen == ["1_rhythm", "2_harmony", "3_stems", "4_tracks", "5_quantized", "6_fretted", "7_refined"]
 
 
 def test_refiners_run_in_order(tmp_path):

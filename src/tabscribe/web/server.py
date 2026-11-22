@@ -13,6 +13,8 @@ Routes
   POST /api/transcribe         body = audio bytes, header X-Filename; returns {job}
   GET  /api/jobs/<id>          {status, stage, done, error, song}
   GET  /api/pipeline           which adapter fills each stage
+  GET  /api/media/<name>       the song's recording and stems, if any
+  GET  /media/<name>/<file>    audio file (supports Range requests, for seeking)
 """
 
 from __future__ import annotations
@@ -31,6 +33,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote, unquote
 
+from ..library import list_media, media_dir, save_media
+
 STATIC = Path(__file__).parent / "static"
 ROOT = Path(__file__).resolve().parents[3]
 ALPHATAB_LOCAL = ROOT / "node_modules" / "@coderline" / "alphatab" / "dist"
@@ -39,10 +43,11 @@ SAFE_NAME = re.compile(r"^[\w\- .()]+$")
 STAGE_LABELS = {
     "1_rhythm": "Beats and bars",
     "2_harmony": "Chords",
-    "3_tracks": "Separate and transcribe",
-    "4_quantized": "Snap to grid",
-    "5_fretted": "Strings and frets",
-    "6_refined": "Clean-up",
+    "3_stems": "Separate instruments",
+    "4_tracks": "Notes and drums",
+    "5_quantized": "Snap to grid",
+    "6_fretted": "Strings and frets",
+    "7_refined": "Clean-up",
 }
 
 mimetypes.add_type("font/woff2", ".woff2")
@@ -87,7 +92,8 @@ class App:
             title = re.search(r'\\title\s+"([^"]*)"', head)
             tracks = re.findall(r'\\track\s+"([^"]*)"', p.read_text(errors="replace"))
             songs.append({"name": p.stem, "title": title.group(1) if title else p.stem,
-                          "tracks": tracks, "mtime": p.stat().st_mtime})
+                          "tracks": tracks, "mtime": p.stat().st_mtime,
+                          "media": bool(list_media(self.library, p.stem))})
         return songs
 
     # --- transcription -----------------------------------------------------------
@@ -111,8 +117,10 @@ class App:
 
             pipeline = build_pipeline(load_config(self.config_path))
             stage_names = list(STAGE_LABELS)
+            outputs: dict[str, object] = {}
 
-            def observe(stage: str, _output: object) -> None:
+            def observe(stage: str, output: object) -> None:
+                outputs[stage] = output
                 job.done.append(STAGE_LABELS.get(stage, stage))
                 i = stage_names.index(stage) if stage in stage_names else -1
                 job.stage = STAGE_LABELS[stage_names[i + 1]] if 0 <= i < len(stage_names) - 1 \
@@ -127,6 +135,7 @@ class App:
                 target = self.path_for(f"{job.name} ({n})")
                 n += 1
             target.write_text(AlphaTexWriter().write(song))
+            save_media(self.library, target.stem, audio_path, outputs.get("3_stems") or {})
             job.song, job.status = target.stem, "done"
         except Exception as e:  # report to the browser instead of dying silently
             job.status, job.error = "error", f"{type(e).__name__}: {e}"
@@ -169,6 +178,37 @@ class Handler(http.server.BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         self._send(200, path.read_bytes(), ctype)
 
+    def _media(self, name: str, filename: str) -> None:
+        """Serve an audio file, honouring Range requests so the player can seek."""
+        folder = media_dir(self.app.library, self.app.path_for(name).stem)
+        path = (folder / Path(unquote(filename)).name)
+        if not path.is_file():
+            self._json({"error": "not found"}, 404)
+            return
+        size = path.stat().st_size
+        ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        start, end = 0, size - 1
+        match = re.match(r"bytes=(\d*)-(\d*)", self.headers.get("Range", ""))
+        if match and (match.group(1) or match.group(2)):
+            if match.group(1):
+                start = int(match.group(1))
+                end = int(match.group(2)) if match.group(2) else size - 1
+            else:  # suffix range: last N bytes
+                start = max(0, size - int(match.group(2)))
+            end = min(end, size - 1)
+            if start > end:
+                self._send(416, b"", "text/plain", {"Content-Range": f"bytes */{size}"})
+                return
+        with path.open("rb") as f:
+            f.seek(start)
+            body = f.read(end - start + 1)
+        headers = {"Accept-Ranges": "bytes"}
+        status = 200
+        if match and (match.group(1) or match.group(2)):
+            status = 206
+            headers["Content-Range"] = f"bytes {start}-{end}/{size}"
+        self._send(status, body, ctype, headers)
+
     def _body(self) -> bytes:
         return self.rfile.read(int(self.headers.get("Content-Length", 0)))
 
@@ -201,6 +241,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._json(job.__dict__ if job else {"error": "not found"}, 200 if job else 404)
             elif path == "/api/pipeline":
                 self._json(self.app.pipeline_info())
+            elif path.startswith("/api/media/"):
+                name = self.app.path_for(path.removeprefix("/api/media/")).stem
+                self._json(list_media(self.app.library, name))
+            elif path.startswith("/media/"):
+                name, _, filename = path.removeprefix("/media/").partition("/")
+                self._media(name, filename)
             else:
                 self._json({"error": "not found"}, 404)
         except ValueError as e:

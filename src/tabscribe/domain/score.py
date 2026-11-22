@@ -65,6 +65,16 @@ class DrumPart:
 Part = PitchedPart | DrumPart
 
 
+@dataclass(frozen=True)
+class SyncPoint:
+    """Where a point of the score is in the original recording: links score
+    time (ticks) back to performance time (seconds). One per beat is typical;
+    between points, time is interpolated."""
+
+    tick: Ticks
+    seconds: float
+
+
 @dataclass
 class Song:
     title: str = ""
@@ -73,6 +83,7 @@ class Song:
     beat_unit: int = 4
     chords: list[ChordSymbol] = field(default_factory=list)
     parts: list[Part] = field(default_factory=list)
+    sync: list[SyncPoint] = field(default_factory=list)  # empty if not from a recording
 
     @property
     def ticks_per_bar(self) -> Ticks:

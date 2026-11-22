@@ -21,6 +21,7 @@ from ...domain import (
     ScoreHit,
     ScoreNote,
     Song,
+    SyncPoint,
     Tuning,
 )
 
@@ -72,7 +73,9 @@ class AlphaTexReader:
 
         unit = data["beatUnit"]
         song = Song(title=data["title"] or "", tempo_bpm=data["tempo"],
-                    beats_per_bar=data["beatsPerBar"], beat_unit=unit)
+                    beats_per_bar=data["beatsPerBar"], beat_unit=unit,
+                    sync=[SyncPoint(_ticks(round(p["tick"]), unit), p["ms"] / 1000)
+                          for p in data.get("sync", [])])
         for track in data["tracks"]:
             role = _role(track)
             if role is Role.DRUMS:

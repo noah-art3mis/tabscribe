@@ -34,7 +34,14 @@ const effects = n => {
 };
 
 const bar0 = score.masterBars[0];
+const sync = (score.exportFlatSyncPoints?.() ?? [])
+  .filter(p => p.barIndex < score.masterBars.length && p.barOccurence === 0)
+  .map(p => {
+    const mb = score.masterBars[p.barIndex];
+    return { tick: mb.start + p.barPosition * mb.calculateDuration(), ms: p.millisecondOffset };
+  });
 const out = {
+  sync,
   title: score.title,
   tempo: score.tempo,
   beatsPerBar: bar0.timeSignatureNumerator,

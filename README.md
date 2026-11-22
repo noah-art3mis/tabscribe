@@ -5,7 +5,7 @@ Turn a recording into tabs for guitar, bass and drums, view them Guitar Pro-styl
 ## How it works
 
 1. **Transcribe.** A pipeline of models separates the instruments, finds the beat, bars and chords, hears the notes and drum hits, snaps them to the grid and picks strings and frets. The result is an `.atex` file (alphaTex, a plain-text music notation format).
-2. **Look and listen.** `tabscribe web songs/` opens a local app: score with tab and optional notation, playback with a cursor, per-track mute, solo and volume, speed, loop and metronome.
+2. **Look and listen.** `tabscribe web songs/` opens a local app: score with tab and optional notation, playback with a cursor, per-track mute, solo and volume, speed, loop and metronome. Songs keep their original recording and stems, so you can play the tab and the recording together: balance them, flip between them (A/B, key **B**), or put one in each ear.
 3. **Fix by prompting.** In Claude Code, in this folder: *"bar 2 should be in 7th position"*, *"those are hammer-ons"*, *"add a crash on the first beat"*. It edits the `.atex` file and the app redraws within a second. `CLAUDE.md` gives Claude Code the rules. You can also edit the source in the app's side panel.
 
 ## Setup

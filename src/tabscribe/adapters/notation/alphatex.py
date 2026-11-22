@@ -75,6 +75,18 @@ class AlphaTexWriter:
             lines += self._header(part)
             lines += self._bars(part, song, chords if part is chord_part else {})
             lines.append("")
+        if song.sync:
+            lines.append("// Where each beat is in the original recording: (bar occurrence ms position-in-bar).")
+            lines.append("// Keep these when editing notes; adjust bar numbers if you add or remove bars.")
+            bar, end = song.ticks_per_bar, song.length
+            for p in song.sync:
+                if p.tick > end:
+                    break
+                index, position = divmod(p.tick, bar)
+                if p.tick == end:  # end of the song: last bar, position 1
+                    index, position = index - 1, bar
+                lines.append(f"\\sync ({index} 0 {round(p.seconds * 1000)} {position / bar:g})")
+            lines.append("")
         return "\n".join(lines)
 
     @staticmethod

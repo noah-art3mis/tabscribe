@@ -46,7 +46,8 @@ The quantizer is the only stage that converts between the two.
 
 **Interfaces**: ways in for a person or a test, all using the same pipeline and files.
 - `cli.py`: `tab`, `web`, `watch`, `eval`, `render`, `stages`.
-- `web/`: a local web app (`tabscribe web songs/`). A small standard-library server lists and saves `.atex` files and runs transcriptions in the background; the page uses alphaTab to show the score Guitar Pro-style (tracks with mute, solo and volume; playback with speed, loop, metronome; notation on or off; page or horizontal layout) and has a source panel to edit the alphaTex with live preview. It polls the open file, so edits from Claude Code appear within a second.
+- `library.py`: the song folder layout: `<name>.atex`, plus `<name>.media/` holding the original recording (`mix.*`) and any stems, so the tab can be played against them.
+- `web/`: a local web app (`tabscribe web songs/`). A small standard-library server lists and saves `.atex` files and runs transcriptions in the background; the page uses alphaTab to show the score Guitar Pro-style (tracks with mute, solo and volume; playback with speed, loop, metronome; notation on or off; page or horizontal layout) and has a source panel to edit the alphaTex with live preview. It polls the open file, so edits from Claude Code appear within a second. When the song has a recording, a Recording panel plays it (or any stem) together with the tab: a Tab ↔ Recording balance, an A/B flip, a left/right split, and an offset. alphaTab can't mix its synth with external audio, so the recording plays in an `<audio>` element routed through Web Audio for gain and panning, and follows the alphaTab cursor using the song's sync points, nudging its playback rate (pitch preserved) to stay within a few tens of milliseconds.
 - `evals/`: renders reference tabs to audio and scores each stage against them. See `evals/README.md`.
 
 ## Glossary
@@ -65,7 +66,8 @@ The quantizer is the only stage that converts between the two.
 | Tick | Score time unit; 48 per beat |
 | ScoreNote / ScoreHit | A note or hit placed on the grid, in ticks. A ScoreNote gains a string and fret when fretted |
 | Part | All notes for one instrument, in ticks (`PitchedPart`, `DrumPart`) |
-| Song | The aggregate: title, tempo, meter, chord symbols and parts. What writers and editors work on |
+| Song | The aggregate: title, tempo, meter, chord symbols, parts and sync points. What writers and editors work on |
+| SyncPoint | Where a tick of the score is in the original recording (seconds). The quantizer records one per beat; alphaTex stores them as `\sync` lines |
 
 "Track" always means seconds and "Part" always means ticks.
 
@@ -132,11 +134,11 @@ refiners = ["my_models.cleanup:LlmTabCleaner"]
 ```bash
 tabscribe tab song.mp3 --inspect -o out/
 ls out/stages/
-# 1_rhythm.json  2_harmony.json  3_tracks.json
-# 4_quantized.json  5_fretted.json  6_refined.json
+# 1_rhythm.json  2_harmony.json  3_stems.json  4_tracks.json
+# 5_quantized.json  6_fretted.json  7_refined.json
 ```
 
-Comparing `3_tracks.json` (seconds, as heard) with `4_quantized.json` (ticks, on the grid) shows what quantizing changed; `4` against `5` shows the fret choices.
+Comparing `4_tracks.json` (seconds, as heard) with `5_quantized.json` (ticks, on the grid) shows what quantizing changed; `5` against `6` shows the fret choices.
 
 `examples/fake.toml` runs the whole pipeline with fake models, so all of this works before any model is installed.
 
