@@ -6,7 +6,7 @@ The architecture is in `docs/architecture.md`; read it before changing the pipel
 - Each pipeline stage is a Protocol in `application/ports.py`. Don't change a port's signature without updating every adapter and `docs/architecture.md`.
 - New models go in `adapters/` as a class satisfying a port, registered in `ADAPTERS` in `application/config.py`. Import heavy libraries inside methods, not at module top.
 - "Track" means seconds, "Part" means ticks. Only the Quantizer converts between them.
-- Run `pytest` after changes. Add new adapters to the parametrised list in `tests/test_contracts.py`.
+- The project uses uv: `uv sync` to install, `uv run pytest -q` after changes, `uv add` for new dependencies (never `pip`). Add new adapters to the parametrised list in `tests/test_contracts.py`.
 - When changing a model adapter, the quantizer or the fretter, run `tabscribe eval` before and after and compare `out/evals/summary.md`. Tune on more than one `--seed`. See `evals/README.md`.
 - `web/static/` is plain HTML/CSS/JS with no build step; alphaTab is served from `node_modules`.
 

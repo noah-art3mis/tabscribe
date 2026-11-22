@@ -11,21 +11,20 @@ Turn a recording into tabs for guitar, bass and drums, view them Guitar Pro-styl
 ## Setup
 
 ```bash
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -e ".[ml,dev]"     # models: Basic Pitch, madmom, ADTOF, Demucs (needs PyTorch)
-npm install                     # alphaTab, used by the app and to read/validate .atex
+uv sync --extra ml             # models: Basic Pitch, madmom, ADTOF, Demucs (needs PyTorch)
+npm install                    # alphaTab, used by the app and to read/validate .atex
 ```
 
 ## Use
 
 ```bash
-tabscribe web songs/            # the app; "Transcribe audio…" turns a recording into a song
-tabscribe tab song.mp3 -o songs/ --inspect   # same from the command line, saving every stage's output
-tabscribe watch songs/song.atex # open one file in the app
-tabscribe render songs/song.atex  # print it as plain-text tab
+uv run tabscribe web songs/            # the app; "Transcribe audio…" turns a recording into a song
+uv run tabscribe tab song.mp3 -o songs/ --inspect   # same from the command line, saving every stage's output
+uv run tabscribe watch songs/song.atex # open one file in the app
+uv run tabscribe render songs/song.atex  # print it as plain-text tab
 ```
 
-No models installed yet? `-c examples/fake.toml` runs everything with stand-ins.
+No models installed yet? `uv sync` alone installs the core, and `-c examples/fake.toml` runs everything with stand-ins.
 
 ## How good is it?
 
@@ -37,6 +36,6 @@ Every stage is an interface with fixed inputs and outputs, and a TOML config dec
 
 ## Notes
 
-- Basic Pitch is licensed CC BY-NC 4.0 (non-commercial).
+- tabscribe is MIT-licensed (see [LICENSE](LICENSE)). Basic Pitch, an optional model dependency, is licensed CC BY-NC 4.0 (non-commercial).
 - Demucs downloads its weights on first use from Meta's servers.
 - The app serves alphaTab from `node_modules`; without `npm install` it falls back to the jsDelivr CDN.
