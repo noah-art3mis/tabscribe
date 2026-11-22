@@ -1,0 +1,9 @@
+{
+  "name": "tabscribe-tools",
+  "private": true,
+  "type": "module",
+  "description": "Node helpers for tabscribe (alphaTex validation)",
+  "devDependencies": {
+    "@coderline/alphatab": "~1.9.0"
+  }
+}
