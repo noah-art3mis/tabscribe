@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tabscribe"
+version = "0.0.1"
+description = "Practice player for transcribing music by ear, with automatic guitar tab drafts"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+# Heavy ML deps kept optional until each stage is implemented.
+autotab = [
+  "demucs",
+  "madmom",
+  "basic-pitch",
+  "PyGuitarPro",
+]
+player = [
+  "pyrubberband",
+  "soundfile",
+  "numpy",
+  "librosa",
+]
+
+[project.scripts]
+tabscribe = "tabscribe.cli:main"

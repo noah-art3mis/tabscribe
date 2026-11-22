@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+# audio and model outputs
+*.wav
+*.mp3
+*.flac
+separated/
+out/
