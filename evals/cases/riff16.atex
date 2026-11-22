@@ -1,0 +1,30 @@
+\title "Riff in sixteenths"
+\tempo 110
+\ts (4 4)
+\track "Guitar" { instrument "Electric Guitar Clean" }
+\staff {tabs}
+\tuning (E4 B3 G3 D3 A2 E2)
+5.6.16 {ch "Am"} 8.6.16 5.5.16 7.5.16 5.4.16 7.4.16 5.3.16 7.3.16 5.2.16 8.2.16 5.1.16 8.1.16 5.1.16 8.2.16 5.2.16 7.3.16 |
+7.3.16 5.3.16 7.4.16 5.4.16 7.5.16 5.5.16 8.6.16 5.6.16 5.6.8 7.5.8 5.5.8 7.4.8 |
+5.6.16 8.6.16 5.5.16 7.5.16 5.4.16 7.4.16 5.3.16 7.3.16 5.2.16 8.2.16 5.1.16 8.1.16 5.1.16 8.2.16 5.2.16 7.3.16 |
+7.3.16 5.3.16 7.4.16 5.4.16 7.5.16 5.5.16 8.6.16 5.6.16 5.6.8 7.5.8 5.5.8 7.4.8 |
+
+\track "Bass" { instrument "Electric Bass Finger" }
+\staff {tabs}
+\tuning (G2 D2 A1 E1)
+\clef bass
+0.3.8 0.3.8 3.3.8 0.3.8 5.3.8 3.3.8 0.3.8 3.4.8 |
+5.3.8 5.3.8 3.3.8 0.3.8 3.4.8 3.4.8 5.4.4 |
+0.3.8 0.3.8 3.3.8 0.3.8 5.3.8 3.3.8 0.3.8 3.4.8 |
+5.3.8 5.3.8 3.3.8 0.3.8 3.4.8 3.4.8 5.4.4 |
+
+\track "Drums" { instrument percussion }
+\clef neutral
+\articulation (Kick 36)
+\articulation (Snare 38)
+\articulation (HatClosed 42)
+\articulation (Crash 49)
+(Kick Crash).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 |
+(Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 |
+(Kick Crash).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 |
+(Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 (Kick HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 (Snare HatClosed).16 HatClosed.16 HatClosed.16 HatClosed.16 |

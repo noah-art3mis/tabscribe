@@ -28,6 +28,7 @@ from .pipeline import TranscriptionPipeline
 ADAPTERS: dict[str, str] = {
     # stems
     "demucs": "tabscribe.adapters.ml.demucs:DemucsSeparator",
+    "folder_stems": "tabscribe.adapters.audio.folder_stems:FolderStems",
     # rhythm and harmony
     "madmom_rhythm": "tabscribe.adapters.ml.madmom:MadmomRhythm",
     "madmom_chords": "tabscribe.adapters.ml.madmom:MadmomChords",

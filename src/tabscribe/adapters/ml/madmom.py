@@ -22,15 +22,23 @@ def chord_label(madmom_label: str) -> str:
 
 
 class MadmomRhythm:
-    def __init__(self, beats_per_bar: tuple[int, ...] = (3, 4), fps: int = 100):
+    """`min_bpm`/`max_bpm` bound the tempo search. Half-time grooves are
+    ambiguous (90 bpm with eighth-note hats can sound like 180), so the
+    default range covers most songs and can be overridden per song."""
+
+    def __init__(self, beats_per_bar: tuple[int, ...] = (3, 4), fps: int = 100,
+                 min_bpm: float = 55.0, max_bpm: float = 170.0):
         self.beats_per_bar = list(beats_per_bar)
         self.fps = fps
+        self.min_bpm = min_bpm
+        self.max_bpm = max_bpm
 
     def analyze(self, mix: AudioRef) -> Rhythm:
         from madmom.features.downbeats import DBNDownBeatTrackingProcessor, RNNDownBeatProcessor
 
         activations = RNNDownBeatProcessor()(str(mix.path))
-        beats = DBNDownBeatTrackingProcessor(beats_per_bar=self.beats_per_bar, fps=self.fps)(activations)
+        beats = DBNDownBeatTrackingProcessor(beats_per_bar=self.beats_per_bar, fps=self.fps,
+                                             min_bpm=self.min_bpm, max_bpm=self.max_bpm)(activations)
         times = [float(t) for t, _ in beats]
         downbeats = [float(t) for t, n in beats if int(n) == 1]
         meter = int(max(n for _, n in beats)) if len(beats) else 4

@@ -1,0 +1,29 @@
+\title "Strummed open chords"
+\tempo 90
+\ts (4 4)
+\track "Guitar" { instrument "Acoustic Guitar Steel" }
+\staff {tabs}
+\tuning (E4 B3 G3 D3 A2 E2)
+(0.6 2.5 2.4 1.3 0.2 0.1).4 {ch "E"} (0.6 2.5 2.4 1.3 0.2 0.1).8 (0.6 2.5 2.4 1.3 0.2 0.1).8 r.8 (0.6 2.5 2.4 1.3 0.2 0.1).8 (0.6 2.5 2.4 1.3 0.2 0.1).4 |
+(0.5 2.4 2.3 2.2 0.1).4 {ch "A"} (0.5 2.4 2.3 2.2 0.1).8 (0.5 2.4 2.3 2.2 0.1).8 r.8 (0.5 2.4 2.3 2.2 0.1).8 (0.5 2.4 2.3 2.2 0.1).4 |
+(0.4 2.3 3.2 2.1).4 {ch "D"} (0.4 2.3 3.2 2.1).8 (0.4 2.3 3.2 2.1).8 r.8 (0.4 2.3 3.2 2.1).8 (0.4 2.3 3.2 2.1).4 |
+(0.5 2.4 2.3 2.2 0.1).4 {ch "A"} (0.5 2.4 2.3 2.2 0.1).8 (0.5 2.4 2.3 2.2 0.1).8 r.8 (0.5 2.4 2.3 2.2 0.1).8 (0.5 2.4 2.3 2.2 0.1).4 |
+
+\track "Bass" { instrument "Electric Bass Finger" }
+\staff {tabs}
+\tuning (G2 D2 A1 E1)
+\clef bass
+0.4.4 r.8 0.4.8 0.4.4 2.3.4 |
+0.3.4 r.8 0.3.8 0.3.4 2.2.4 |
+0.2.4 r.8 0.2.8 0.2.4 0.3.4 |
+0.3.4 r.8 0.3.8 0.3.4 2.2.4 |
+
+\track "Drums" { instrument percussion }
+\clef neutral
+\articulation (Kick 36)
+\articulation (Snare 38)
+\articulation (HatClosed 42)
+(Kick HatClosed).8 HatClosed.8 HatClosed.8 HatClosed.8 (Snare HatClosed).8 HatClosed.8 HatClosed.8 (Kick HatClosed).8 |
+(Kick HatClosed).8 HatClosed.8 HatClosed.8 HatClosed.8 (Snare HatClosed).8 HatClosed.8 HatClosed.8 (Kick HatClosed).8 |
+(Kick HatClosed).8 HatClosed.8 HatClosed.8 HatClosed.8 (Snare HatClosed).8 HatClosed.8 HatClosed.8 (Kick HatClosed).8 |
+(Kick HatClosed).8 HatClosed.8 HatClosed.8 HatClosed.8 (Snare HatClosed).8 HatClosed.8 HatClosed.8 (Kick HatClosed).8 |

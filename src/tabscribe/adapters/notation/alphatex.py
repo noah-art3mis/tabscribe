@@ -68,8 +68,7 @@ class AlphaTexWriter:
         if song.title:
             lines.append(f'\\title "{song.title}"')
         lines.append(f"\\tempo {round(song.tempo_bpm)}")
-        lines.append(f"\\ts {song.beats_per_bar} {song.beat_unit}")
-        lines.append(".")
+        lines.append(f"\\ts ({song.beats_per_bar} {song.beat_unit})")
         chords = {c.start: c.label for c in song.chords}
         chord_part = next((p for p in song.parts if p.instrument.role is Role.GUITAR), None)
         for part in song.parts:
@@ -83,12 +82,14 @@ class AlphaTexWriter:
         inst = part.instrument
         if isinstance(part, DrumPart):
             out = [f'\\track "{inst.name}" {{ instrument percussion }}', "\\clef neutral"]
-            out += [f"\\articulation {name} {piece.value}" for piece, name in ARTICULATIONS.items()]
+            out += [f"\\articulation ({name} {piece.value})" for piece, name in ARTICULATIONS.items()]
             return out
         name = INSTRUMENT_NAMES.get(inst.role, "Electric Guitar Clean")
         out = [f'\\track "{inst.name}" {{ instrument "{name}" }}', "\\staff {tabs}"]
         if inst.tuning is not None:
-            out.append("\\tuning " + " ".join(pitch_name(p) for p in inst.tuning.strings))
+            out.append("\\tuning (" + " ".join(pitch_name(p) for p in inst.tuning.strings) + ")")
+        if inst.role is Role.BASS:
+            out.append("\\clef bass")  # notation (when shown) in bass clef, an octave up as usual
         return out
 
     def _bars(self, part: Part, song: Song, chords: dict[int, str]) -> list[str]:

@@ -1,0 +1,38 @@
+\title "Arpeggios"
+\tempo 100
+\ts (4 4)
+\track "Guitar" { instrument "Electric Guitar Clean" }
+\staff {tabs}
+\tuning (E4 B3 G3 D3 A2 E2)
+3.5.8 {ch "C"} 2.4.8 0.3.8 1.2.8 3.5.8 2.4.8 0.3.8 1.2.8 |
+3.6.8 {ch "G"} 2.5.8 0.4.8 0.3.8 3.6.8 2.5.8 0.4.8 0.3.8 |
+0.5.8 {ch "Am"} 2.4.8 2.3.8 1.2.8 0.5.8 2.4.8 2.3.8 1.2.8 |
+3.4.8 {ch "F"} 2.3.8 1.2.8 1.1.8 3.4.8 2.3.8 1.2.8 1.1.8 |
+
+\track "Bass" { instrument "Electric Bass Finger" }
+\staff {tabs}
+\tuning (G2 D2 A1 E1)
+\clef bass
+3.3.4 3.3.4 3.3.4 3.3.4 |
+3.4.4 3.4.4 3.4.4 3.4.8 r.8 |
+0.3.4 0.3.4 0.3.4 0.3.8 r.8 |
+1.4.4 1.4.4 1.4.8 r.8 1.4.8 r.8 |
+
+\track "Drums" { instrument percussion }
+\clef neutral
+\articulation (Kick 36)
+\articulation (Stick 37)
+\articulation (Snare 38)
+\articulation (TomFloor 41)
+\articulation (HatClosed 42)
+\articulation (HatPedal 44)
+\articulation (TomLow 45)
+\articulation (HatOpen 46)
+\articulation (TomHigh 48)
+\articulation (Crash 49)
+\articulation (Ride 51)
+\articulation (RideBell 53)
+(HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 (HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 |
+(HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 (HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 |
+(HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 (HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 |
+(HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 (HatClosed Kick).8 HatClosed.8 (HatClosed Snare).8 HatClosed.8 |

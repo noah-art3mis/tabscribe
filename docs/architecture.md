@@ -6,8 +6,8 @@ tabscribe turns a recording into editable tabs. The code is split into layers so
 
 ```
             ┌──────────────────────────────────────────────┐
-            │  interfaces   cli.py, watch.py (and later    │
-            │               a web app)                     │
+            │  interfaces   cli.py, web/ (Guitar Pro-style │
+            │               app), evals/ (scoring)         │
             └───────────────┬──────────────────────────────┘
                             │ calls
             ┌───────────────▼──────────────────────────────┐
@@ -44,7 +44,10 @@ The quantizer is the only stage that converts between the two.
 
 **Adapters** (`src/tabscribe/adapters/`): concrete implementations of the ports, grouped by kind: `ml/` (models), `quantize/`, `fretting/`, `notation/` (writers), `testing/` (fakes).
 
-**Interfaces** (`cli.py`, `watch.py`): ways in for a person. A web app would be another one, calling the same pipeline.
+**Interfaces**: ways in for a person or a test, all using the same pipeline and files.
+- `cli.py`: `tab`, `web`, `watch`, `eval`, `render`, `stages`.
+- `web/`: a local web app (`tabscribe web songs/`). A small standard-library server lists and saves `.atex` files and runs transcriptions in the background; the page uses alphaTab to show the score Guitar Pro-style (tracks with mute, solo and volume; playback with speed, loop, metronome; notation on or off; page or horizontal layout) and has a source panel to edit the alphaTex with live preview. It polls the open file, so edits from Claude Code appear within a second.
+- `evals/`: renders reference tabs to audio and scores each stage against them. See `evals/README.md`.
 
 ## Glossary
 
@@ -78,12 +81,17 @@ Each stage is a Python `Protocol` in `application/ports.py`. An adapter fits a s
 | 4a | **PitchTranscriber** | one stem, Instrument | NoteEvents | Basic Pitch | unquantised and unfretted; may use the instrument to limit range |
 | 4b | **DrumTranscriber** | drum stem | DrumHits | ADTOF (not written yet) | pieces as General MIDI keys |
 | 4* | **MixTranscriber** (alternative to 1 + 4a + 4b) | mix, Instruments | Tracks | MuScriptor (not written yet) | the slot for end-to-end models |
-| 5 | **Quantizer** | Tracks, Rhythm, Harmony, title | Song (unfretted) | grid | the only stage that converts seconds to ticks |
+| 5 | **Quantizer** | Tracks, Rhythm, Harmony, title | Song (unfretted) | grid | the only stage that converts seconds to ticks; may correct the rhythm first (see below) |
 | 6 | **FretAssigner** | a part's notes, Tuning | the same notes with string and fret | min-movement | keep positions already set; leave unplayable notes unfretted |
 | 7 | **Refiner** (zero or more) | Song | Song | none | any cleanup: ghost notes, hammer-on detection, an LLM pass |
 | 8 | **SongWriter** | Song | text | alphaTex, plain-text tab | `extension` names the file type |
+| 9 | **SongReader** | text | Song | alphaTex (parsed by alphaTab in Node) | the inverse of a writer; used to load edited tabs |
 
 Stages 1 to 4 deal with audio and seconds. Stages 5 onward deal with the score. Rhythm and harmony are read once from the mix and passed along.
+
+### Why the quantizer corrects the rhythm
+
+Beat trackers usually get the tempo right but can be off in phase: beat 1 placed on beat 3, or every beat placed on the "and". Either shifts the whole tab. The quantizer is the first stage that sees the rhythm together with the notes, drums and chords, so it checks the phase there: kick, snare and note onsets should mostly fall on beats, and chord changes on beat 1. Notes before the first bar line are kept by starting the grid a bar earlier. Each correction can be switched off in the config.
 
 ## Changing a component
 
@@ -132,13 +140,19 @@ Comparing `3_tracks.json` (seconds, as heard) with `4_quantized.json` (ticks, on
 
 `examples/fake.toml` runs the whole pipeline with fake models, so all of this works before any model is installed.
 
+## Measuring a change
+
+`tabscribe eval` renders the reference tabs in `evals/cases/` to audio with known notes, runs a configuration, and scores every stage (see `evals/README.md`). Run it before and after swapping a component.
+
 ## Status
 
 | Part | State |
 |---|---|
 | Domain, ports, pipeline, config, inspection | done, tested |
-| Quantizer (grid), fret assigner (min-movement) | done, tested |
-| alphaTex and plain-text writers | done, tested; alphaTex validated against alphaTab 1.9 |
-| Demucs, Basic Pitch, madmom adapters | written against their documented APIs, not yet run |
-| ADTOF, MuScriptor adapters | placeholders |
-| Web interface (Guitar Pro style) | planned; would build on the alphaTab preview |
+| Quantizer (grid, with rhythm corrections), fret assigner (min-movement) | done, tested, evaluated |
+| alphaTex reader and writer, plain-text writer | done, tested; validated against alphaTab 1.9 |
+| Basic Pitch, madmom, ADTOF adapters | run and evaluated on synthetic audio |
+| Demucs adapter | written against its documented CLI; not run (weights couldn't be downloaded where this was built) |
+| MuScriptor adapter | placeholder |
+| Web app | done; tested in headless Chrome |
+| Evals | 4 synthetic cases; real recorded datasets still to add |

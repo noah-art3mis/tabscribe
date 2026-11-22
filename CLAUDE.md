@@ -7,6 +7,8 @@ The architecture is in `docs/architecture.md`; read it before changing the pipel
 - New models go in `adapters/` as a class satisfying a port, registered in `ADAPTERS` in `application/config.py`. Import heavy libraries inside methods, not at module top.
 - "Track" means seconds, "Part" means ticks. Only the Quantizer converts between them.
 - Run `pytest` after changes. Add new adapters to the parametrised list in `tests/test_contracts.py`.
+- When changing a model adapter, the quantizer or the fretter, run `tabscribe eval` before and after and compare `out/evals/summary.md`. Tune on more than one `--seed`. See `evals/README.md`.
+- `web/static/` is plain HTML/CSS/JS with no build step; alphaTab is served from `node_modules`.
 
 # Editing tabs in this repo
 
@@ -23,11 +25,16 @@ Songs are stored as alphaTex (`.atex`). The `.atex` file is the source of truth:
 - Chord name above a beat: `3.5.8 {ch "C"}`
 - Note effects go in braces between the note and its duration: `3.5{h}.4` (inside a chord: `(3.5{pm} 2.4).8`). Hammer-on/pull-off `{h}`, slide `{sl}`, bend `{b (0 4)}`, vibrato `{v}`, palm mute `{pm}`, dead note `{x}`, let ring `{lr}`. Check https://alphatab.net/docs/alphatex/ when unsure.
 - Each bar must add up to the time signature (`\ts 4 4` = four quarter notes). After any edit, re-check that the edited bars still add up.
+- Statements with more than one value take parentheses: `\ts (3 4)`, `\tuning (E4 B3 G3 D3 A2 E2)`, `\articulation (Kick 36)`. No `.` line is needed after the header.
 - Tracks start with `\track "Name"`. Guitar and bass use fret.string; drums (`instrument percussion`) use the articulation names defined under the drum track (`Kick`, `Snare`, `HatClosed`, ...), e.g. `(HatClosed Kick).8`.
 
 ## Playability
 
-When moving notes, keep them playable: within about a 4–5 fret stretch per position for a single hand shape, and prefer staying in one position over jumping. Guitar standard tuning is E4 B3 G3 D3 A2 E2 (string 1 to 6); bass is G2 D2 A1 E1.
+When moving notes, keep them playable: within about a 4–5 fret stretch per position for a single hand shape, and prefer staying in one position over jumping. Guitar standard tuning is `\tuning (E4 B3 G3 D3 A2 E2)` (string 1 to 6); bass is `\tuning (G2 D2 A1 E1)`. Keep the parentheses: without them the tuning swallows the first beat.
+
+## Seeing an edit
+
+The user may have the web app open (`tabscribe web songs/` or `tabscribe watch song.atex`); it reloads the file within a second of a save. `tabscribe render song.atex` prints the plain-text tab if you want to look at the result yourself.
 
 ## Checking an edit
 

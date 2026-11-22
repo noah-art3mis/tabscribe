@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tabscribe"
-version = "0.1.0"
+version = "0.2.0"
 description = "Transcribe recordings into editable guitar, bass and drum tabs"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,10 +13,16 @@ dependencies = []  # the core has no third-party dependencies
 [project.optional-dependencies]
 # Model-backed adapters. Only the ones named in your config are imported.
 ml = [
-  "demucs",
   "basic-pitch",
+  "onnxruntime",                 # Basic Pitch's ONNX model; TensorFlow isn't needed
+  "setuptools<80",               # resampy (used by Basic Pitch) still imports pkg_resources
   "madmom @ git+https://github.com/CPJKU/madmom",
+  "torch",
+  "adtof-pytorch @ git+https://github.com/xavriley/ADTOF-pytorch",
+  "pretty_midi",
+  "demucs",
 ]
+evals = ["pretty_midi", "mir_eval", "soundfile", "numpy"]
 dev = ["pytest"]
 
 [project.scripts]
@@ -26,4 +32,4 @@ tabscribe = "tabscribe.cli:main"
 testpaths = ["tests"]
 
 [tool.hatch.metadata]
-allow-direct-references = true  # madmom installs from git
+allow-direct-references = true  # madmom and ADTOF install from git

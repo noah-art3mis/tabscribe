@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tabscribe</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<header class="toolbar">
+  <div class="brand">tab<span>scribe</span></div>
+  <div class="song-title" id="songTitle">No song open</div>
+
+  <div class="transport" role="group" aria-label="Playback">
+    <button id="btnStop" class="icon" title="Back to start (Home)" disabled>
+      <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg>
+    </button>
+    <button id="btnPlay" class="icon play" title="Play / pause (Space)" disabled>
+      <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></svg>
+      <svg class="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5.5" width="4" height="13" rx="1"/><rect x="13.5" y="5.5" width="4" height="13" rx="1"/></svg>
+    </button>
+    <div class="time" id="time">0:00 / 0:00</div>
+    <label class="select" title="Playback speed">
+      <select id="speed">
+        <option value="0.5">50%</option><option value="0.75">75%</option>
+        <option value="1" selected>100%</option><option value="1.25">125%</option>
+      </select>
+    </label>
+    <button id="btnLoop" class="toggle" title="Loop">Loop</button>
+    <button id="btnMetronome" class="toggle" title="Metronome">Click</button>
+    <button id="btnCountIn" class="toggle" title="Count in one bar">Count-in</button>
+  </div>
+
+  <div class="view" role="group" aria-label="View">
+    <button id="btnNotation" class="toggle" title="Show standard notation above the tab">Notation</button>
+    <button id="btnLayout" class="toggle" title="One long line instead of pages">Horizontal</button>
+    <div class="zoom">
+      <button id="zoomOut" class="icon small" title="Zoom out">−</button>
+      <span id="zoomLabel">100%</span>
+      <button id="zoomIn" class="icon small" title="Zoom in">+</button>
+    </div>
+    <button id="btnSource" class="toggle" title="Edit the alphaTex source">Source</button>
+  </div>
+</header>
+
+<aside class="sidebar">
+  <section>
+    <div class="section-head">
+      <h2>Library</h2>
+      <label class="button primary" title="Transcribe an audio file">
+        Transcribe audio…
+        <input type="file" id="audioInput" accept="audio/*,.wav,.mp3,.flac,.ogg,.m4a" hidden>
+      </label>
+    </div>
+    <div id="jobs"></div>
+    <ul id="songs" class="songs"></ul>
+  </section>
+  <section>
+    <div class="section-head"><h2>Tracks</h2></div>
+    <ul id="tracks" class="tracks"><li class="empty">Open a song to see its tracks</li></ul>
+  </section>
+</aside>
+
+<main class="score-wrap" id="scoreWrap">
+  <div id="welcome" class="welcome">
+    <h1>Open a song from the library</h1>
+    <p>or transcribe a recording with <strong>Transcribe audio…</strong></p>
+    <p class="hint">Edits from Claude Code to the <code>.atex</code> files show up here within a second.</p>
+  </div>
+  <div id="score"></div>
+</main>
+
+<section class="source" id="sourcePanel" hidden>
+  <div class="source-head">
+    <h2>alphaTex source</h2>
+    <span id="sourceState" class="state">Saved</span>
+    <button id="btnRevert" class="button" disabled>Revert</button>
+    <button id="btnSave" class="button primary" disabled>Save</button>
+  </div>
+  <div id="diskBanner" class="banner" hidden>
+    This file changed on disk.
+    <button id="btnLoadDisk" class="button">Load it</button>
+    <button id="btnKeepMine" class="button">Keep my edits</button>
+  </div>
+  <div class="editor">
+    <pre class="gutter" id="gutter" aria-hidden="true">1</pre>
+    <textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+  </div>
+  <div id="sourceError" class="source-error" hidden></div>
+</section>
+
+<footer class="statusbar">
+  <span id="status">Ready</span>
+  <span id="pipelineInfo" class="muted"></span>
+</footer>
+
+<script src="/alphatab/alphaTab.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -134,3 +134,13 @@ class SongWriter(Protocol):
     extension: str  # e.g. "atex", "txt"
 
     def write(self, song: Song) -> str: ...
+
+
+@runtime_checkable
+class SongReader(Protocol):
+    """Text in some notation format -> Song. Used to load edited tabs back
+    (to re-export them, score them against a reference, or show them)."""
+
+    extension: str
+
+    def read(self, text: str) -> Song: ...
