@@ -22,6 +22,17 @@ try {
     console.log(`  ${track.name}: ${staff.bars.length} bars, ${notes} notes`);
   }
 } catch (err) {
-  console.error(`ERROR in ${file}:\n${err.message}`);
+  console.error(`ERROR in ${file}`);
+  const inner = err.cause ?? err.inner ?? err;
+  const items = ['lexerDiagnostics', 'parserDiagnostics', 'semanticDiagnostics']
+    .flatMap(k => inner?.[k]?.items ?? []);
+  if (items.length) {
+    for (const d of items) {
+      const at = d.start ? `line ${d.start.line}, col ${d.start.col}` : 'unknown position';
+      console.error(`  ${at}: ${d.message}`);
+    }
+  } else {
+    console.error(`  ${err.message}`);
+  }
   process.exit(1);
 }
