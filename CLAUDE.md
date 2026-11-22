@@ -1,3 +1,13 @@
+# Working on the code
+
+The architecture is in `docs/architecture.md`; read it before changing the pipeline. In short:
+
+- `domain/` is plain data with no third-party imports. Keep it that way.
+- Each pipeline stage is a Protocol in `application/ports.py`. Don't change a port's signature without updating every adapter and `docs/architecture.md`.
+- New models go in `adapters/` as a class satisfying a port, registered in `ADAPTERS` in `application/config.py`. Import heavy libraries inside methods, not at module top.
+- "Track" means seconds, "Part" means ticks. Only the Quantizer converts between them.
+- Run `pytest` after changes. Add new adapters to the parametrised list in `tests/test_contracts.py`.
+
 # Editing tabs in this repo
 
 Songs are stored as alphaTex (`.atex`). The `.atex` file is the source of truth: when the user asks to change a tab ("move bar 5 to 7th position", "those are hammer-ons", "the kick is on every beat"), edit the `.atex` file directly. The user is usually running `tabscribe watch <file>.atex`, which re-renders in the browser on every save, so small, targeted edits are best.

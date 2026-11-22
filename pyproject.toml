@@ -4,26 +4,26 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tabscribe"
-version = "0.0.1"
-description = "Practice player for transcribing music by ear, with automatic guitar tab drafts"
+version = "0.1.0"
+description = "Transcribe recordings into editable guitar, bass and drum tabs"
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = []
+requires-python = ">=3.11"
+dependencies = []  # the core has no third-party dependencies
 
 [project.optional-dependencies]
-# Heavy ML deps kept optional until each stage is implemented.
-autotab = [
+# Model-backed adapters. Only the ones named in your config are imported.
+ml = [
   "demucs",
-  "madmom",
   "basic-pitch",
-  "PyGuitarPro",
+  "madmom @ git+https://github.com/CPJKU/madmom",
 ]
-player = [
-  "pyrubberband",
-  "soundfile",
-  "numpy",
-  "librosa",
-]
+dev = ["pytest"]
 
 [project.scripts]
 tabscribe = "tabscribe.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.hatch.metadata]
+allow-direct-references = true  # madmom installs from git

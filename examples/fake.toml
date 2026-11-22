@@ -1,0 +1,10 @@
+# Runs the whole pipeline with fake models: no ML installs needed.
+# tabscribe tab any.wav -c examples/fake.toml --inspect -o out/fake
+# The audio file is never read, so any path works.
+
+[stages]
+separator = "fake_separator"
+rhythm = "fake_rhythm"
+harmony = "fake_harmony"
+pitch = "fake_pitch"
+drums = "fake_drums"
