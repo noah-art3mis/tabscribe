@@ -8,6 +8,8 @@ version = "0.2.0"
 description = "Transcribe recordings into editable guitar, bass and drum tabs"
 readme = "README.md"
 requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
 dependencies = []  # the core has no third-party dependencies
 
 [project.optional-dependencies]
@@ -23,6 +25,8 @@ ml = [
   "demucs",
 ]
 evals = ["pretty_midi", "mir_eval", "soundfile", "numpy"]
+
+[dependency-groups]
 dev = ["pytest"]
 
 [project.scripts]
