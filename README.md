@@ -1,6 +1,6 @@
 # tabscribe
 
-An open-source take on Transcribe!: a practice player for working out music by ear, plus an automatic audio → guitar tab draft (Guitar Pro / MusicXML).
+An open-source take on Transcribe!: a practice player for working out music by ear, plus an automatic audio → guitar tab draft (plain-text tab or MusicXML).
 
 ## Goals
 
@@ -15,13 +15,16 @@ An open-source take on Transcribe!: a practice player for working out music by e
 2. **Analyse** – key, chords, beats and downbeats (madmom)
 3. **Transcribe** – audio → MIDI notes (Basic Pitch)
 4. **Fret** – assign each note a playable string/fret
-5. **Export** – `.gp5` (PyGuitarPro), MusicXML, MIDI, ASCII tab
+5. **Export**
+   - `txt` (default) – plain-text tab with chord names above the bars
+   - `musicxml` – opens in MuseScore or TuxGuitar, shown as a tab staff
+   - `gp5` – optional, Guitar Pro
 
-The output is meant as a draft to fix in Guitar Pro / TuxGuitar, not a finished tab.
+The output is meant as a draft to fix by hand, not a finished tab.
 
 ## Status
 
-Scaffold only. Stages live in `src/tabscribe/pipeline.py` as stubs.
+The text-tab renderer (`src/tabscribe/ascii_tab.py`) works. The audio stages in `src/tabscribe/pipeline.py` are still stubs.
 
 ## Notes
 

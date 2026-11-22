@@ -44,16 +44,33 @@ def assign_frets(notes: list[Note], tuning: tuple[int, ...] = (64, 59, 55, 50, 4
     raise NotImplementedError
 
 
-def export_gp5(notes: list[Note], analysis: Analysis, path: Path) -> None:
-    """Write a Guitar Pro 5 file with PyGuitarPro."""
+def export_txt(notes: list[Note], analysis: Analysis, path: Path) -> None:
+    """Plain-text tab, readable anywhere."""
+    from .ascii_tab import render
+
+    path.write_text(render(notes, analysis))
+
+
+def export_musicxml(notes: list[Note], analysis: Analysis, path: Path) -> None:
+    """MusicXML with a tab staff (string/fret technicals). Opens in MuseScore
+    and TuxGuitar."""
     raise NotImplementedError
 
 
-def run(audio: Path, out_dir: Path) -> Path:
+def export_gp5(notes: list[Note], analysis: Analysis, path: Path) -> None:
+    """Optional: Guitar Pro 5 file with PyGuitarPro."""
+    raise NotImplementedError
+
+
+EXPORTERS = {"txt": export_txt, "musicxml": export_musicxml, "gp5": export_gp5}
+
+
+def run(audio: Path, out_dir: Path, fmt: str = "txt") -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     stem = separate(audio, out_dir)
     analysis = analyse(audio)
     notes = assign_frets(transcribe(stem))
-    out = out_dir / (audio.stem + ".gp5")
-    export_gp5(notes, analysis, out)
+    ext = "musicxml" if fmt == "musicxml" else fmt
+    out = out_dir / f"{audio.stem}.{ext}"
+    EXPORTERS[fmt](notes, analysis, out)
     return out
