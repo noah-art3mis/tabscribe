@@ -7,7 +7,7 @@ tabscribe is an open prototype: speed beats robustness. Build the simplest versi
 
 ## Skills and design
 
-The skills below come from the owner's user-level install, not from this repo; keep their contents out of it, since the repo is public.
+The skills below come from the owner's skills repo, linked in with `~/projects/lexgpt-skills/scripts/install.sh <this repo>` (the links are git-excluded). Keep skill contents out of commits.
 
 - **UI work** (anything in `web/static/`): `DESIGN.md` is the authority. Load `simulacro-ui` for the house rules and `frontend-design:frontend-design` as the builder for new visual direction; `show-me` to put the running app in front of the owner.
 - **Model or pipeline tuning:** `experiment`, with `tabscribe eval` as the harness.

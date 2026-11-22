@@ -21,7 +21,6 @@
     hearing: $('hearing'), audio: $('recording'),
   };
 
-  const TRACK_COLORS = ['#e8743b', '#4f9fe8', '#5cb85c', '#c678dd', '#e5c07b', '#56b6c2'];
   const ZOOMS = [0.5, 0.6, 0.75, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2];
   const JOB_STAGES = ['Beats and bars', 'Chords', 'Separate instruments', 'Notes and drums',
                       'Snap to grid', 'Strings and frets', 'Clean-up'];
@@ -147,16 +146,14 @@
     el.tracks.innerHTML = '';
     score.tracks.forEach((track, i) => {
       const li = document.createElement('li');
-      const color = TRACK_COLORS[i % TRACK_COLORS.length];
       const kind = track.isPercussion ? 'Drums' : `${track.staves[0].tuning.length}-string`;
       li.innerHTML = `
-        <span class="dot" style="background:${color}"></span>
-        <span class="name" title="Show / hide in the score"></span>
+        <button type="button" class="name tape" title="Show / hide in the score"></button>
         <span class="ms">
           <button class="mute" title="Mute" aria-pressed="false">M</button>
           <button class="solo" title="Solo" aria-pressed="false">S</button>
         </span>
-        <span class="muted" style="font-size:12px">${kind}</span>
+        <span class="kind">${kind}</span>
         <input type="range" min="0" max="2" step="0.05" title="Volume" aria-label="${track.name} volume">`;
       const name = li.querySelector('.name');
       name.textContent = track.name;
