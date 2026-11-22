@@ -15,12 +15,12 @@ Two stages are also scored alone with perfect input: the quantizer gets the true
 By default the separator is replaced with the perfectly separated stems (`folder_stems`), which isolates the transcription models. Pass a config with `separator = "demucs"` to include separation.
 
 ```bash
-pip install -e ".[ml,evals]"
+uv sync --extra ml --extra evals
 sudo apt install fluidsynth fluid-soundfont-gm   # or: brew install fluid-synth
 npm install
-tabscribe eval                         # all cases, default models
-tabscribe eval --only riff16 --seed 3  # one case, different timing/velocity variation
-tabscribe eval -c my.toml              # try a different model in some stage
+uv run tabscribe eval                         # all cases, default models
+uv run tabscribe eval --only riff16 --seed 3  # one case, different timing/velocity variation
+uv run tabscribe eval -c my.toml              # try a different model in some stage
 ```
 
 Results go to `out/evals/`: `summary.md` (the table below), `results.json` (everything), and per case `result.atex`, `result.txt` and `reference.txt` to compare by eye.
