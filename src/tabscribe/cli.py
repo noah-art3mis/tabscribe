@@ -16,13 +16,31 @@ def main() -> None:
     tab.add_argument("--inspect", action="store_true",
                      help="also save every stage's output as JSON in <out>/stages/")
 
-    watch = sub.add_parser("watch", help="live browser preview of an .atex file")
+    watch = sub.add_parser("watch", help="open one .atex file in the web app (live reload)")
     watch.add_argument("atex", type=Path)
     watch.add_argument("-p", "--port", type=int, default=8765)
     watch.add_argument("--no-open", action="store_true", help="don't open a browser")
 
     stages = sub.add_parser("stages", help="show which adapter fills each stage")
     stages.add_argument("-c", "--config", type=Path)
+
+    ev = sub.add_parser("eval", help="score a pipeline config on reference tabs")
+    ev.add_argument("-c", "--config", type=Path,
+                    help="adapters to test (default: real models, perfect stems)")
+    ev.add_argument("--cases", type=Path, default=Path("evals/cases"))
+    ev.add_argument("--only", nargs="*", help="case names to run (default: all)")
+    ev.add_argument("-o", "--out", type=Path, default=Path("out/evals"))
+    ev.add_argument("--seed", type=int, default=0, help="seed for timing/velocity variation")
+
+    web = sub.add_parser("web", help="open the web app on a folder of songs")
+    web.add_argument("library", type=Path, nargs="?", default=Path("songs"),
+                     help="folder of .atex files (default: ./songs)")
+    web.add_argument("-p", "--port", type=int, default=8765)
+    web.add_argument("-c", "--config", type=Path, help="pipeline config for transcription")
+    web.add_argument("--no-open", action="store_true", help="don't open a browser")
+
+    render = sub.add_parser("render", help="convert an .atex file to plain-text tab")
+    render.add_argument("atex", type=Path)
 
     args = parser.parse_args()
     if args.cmd == "tab":
@@ -39,9 +57,22 @@ def main() -> None:
             path.write_text(writer.write(song))
             print(path)
     elif args.cmd == "watch":
-        from .watch import serve
+        from .web.server import serve as serve_web
 
-        serve(args.atex, args.port, not args.no_open)
+        serve_web(args.atex.parent, args.port, open_browser=not args.no_open, song=args.atex.stem)
+    elif args.cmd == "web":
+        from .web.server import serve as serve_web
+
+        serve_web(args.library, args.port, args.config, not args.no_open)
+    elif args.cmd == "eval":
+        from .evals.run import main as run_eval
+
+        run_eval(args.cases, args.out, args.config, args.only, args.seed)
+    elif args.cmd == "render":
+        from .adapters.notation.alphatex_reader import AlphaTexReader
+        from .adapters.notation.ascii_tab import AsciiTabWriter
+
+        print(AsciiTabWriter().write(AlphaTexReader().read_file(args.atex)), end="")
     elif args.cmd == "stages":
         from .application.config import ADAPTERS, load_config
 
